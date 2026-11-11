@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Самостоятельная работа · 7 класс</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- ЭКРАН 1: ФОРМА -->
+  <section id="screen-start" class="screen">
+    <header class="app-header">
+      <h1>Самостоятельная работа</h1>
+      <p class="app-subtitle">Аппаратное обеспечение компьютера · Файловая система · 7 класс</p>
+    </header>
+
+    <div class="card">
+      <p class="instruction">Введите свои данные. Оценку вы узнаете от учителя после проверки.</p>
+
+      <form id="startForm" class="form">
+        <label class="field">
+          <span>Фамилия</span>
+          <input type="text" id="lastName" required maxlength="40" autocomplete="off">
+        </label>
+        <label class="field">
+          <span>Имя</span>
+          <input type="text" id="firstName" required maxlength="40" autocomplete="off">
+        </label>
+        <label class="field">
+          <span>Класс</span>
+          <input type="text" id="grade" value="7" required maxlength="2" autocomplete="off">
+        </label>
+        <label class="field">
+          <span>Буква класса</span>
+          <select id="letter" required>
+            <option value="">—</option>
+            <option>А</option><option>Б</option><option>В</option>
+            <option>Г</option><option>Д</option><option>Е</option>
+          </select>
+        </label>
+
+        <div class="actions">
+          <button type="submit" class="btn btn-primary">Начать работу →</button>
+        </div>
+      </form>
+
+      <p class="form-note">
+        ⚠️ После нажатия «Начать» вернуться назад будет нельзя.<br>
+        В каждом задании выберите ответ и нажмите «Далее». Правильность вы не увидите — только учитель.
+      </p>
+    </div>
+  </section>
+
+  <!-- ЭКРАН 2: ЗАДАНИЯ -->
+  <section id="screen-quiz" class="screen" hidden>
+    <header class="app-header">
+      <h1>Самостоятельная работа</h1>
+      <div class="progress-wrap">
+        <div class="progress-text" id="progressText"></div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+    </header>
+    <div class="card" id="taskCard"></div>
+  </section>
+
+  <!-- ЭКРАН 3: ГОТОВО -->
+  <section id="screen-done" class="screen" hidden>
+    <div class="card finish">
+      <div class="finish-emoji" id="finishEmoji">✅</div>
+      <h2 id="finishTitle">Ответы отправлены</h2>
+      <p id="finishText">Спасибо! Оценку вы узнаете от учителя.</p>
+    </div>
+  </section>
+
+</div>
+<script src="app.js"></script>
+</body>
+</html>
