@@ -7,20 +7,25 @@
 // URL развернутого веб-приложения Google Apps Script
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyF2x-qnIPerEebab8j4PXEr_U7csUGruQROCLgsKYGRUgeBvMjiHnBSEfpGhE881Wk/exec';
 
-// Список тем по классам
+// Список тем по классам.
+// id = идентификатор листа в Google Sheets (work)
 const TOPICS = {
   '7': [
     {
-      id: '1sm',
-      title: 'Самостоятельная работа 1',
+      id: '7-1sm',
+      title: 'Самостоятельная работа 1 · Аппаратное обеспечение и файловая система',
       path: '7grade/1sm/index.html'
     }
   ],
   '8': [
-    // сюда можно добавить темы для 8 класса
+    {
+      id: '8-2sm',
+      title: 'Самостоятельная работа 1 · Логика и таблицы истинности',
+      path: '8grade/2sm/index.html'
+    }
   ],
   '9': [
-    // сюда можно добавить темы для 9 класса
+    // сюда можно добавлять темы для 9 класса
   ]
 };
 
@@ -49,7 +54,7 @@ let currentGrade = null;
 let currentTopic = null;
 
 /* ==========================================================
-   ЗАПОЛНЕНИЕ СПИСКА ТЕМ
+   СПИСОК ТЕМ
    ========================================================== */
 
 function updateTopicOptions() {
@@ -107,14 +112,12 @@ function updateShowLinkButton() {
 function showStudentLink() {
   if (!currentTopic) return;
 
-  // Формируем абсолютный URL относительно текущей страницы
   const base = window.location.href.replace(/[^/]*$/, ''); // убираем имя файла
   const fullUrl = base + currentTopic.path;
 
   el.studentLink.value = fullUrl;
   el.linkBox.hidden = false;
 
-  // Прокручиваем к блоку со ссылкой
   el.linkBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
@@ -125,7 +128,7 @@ function showStudentLink() {
 function copyStudentLink() {
   const input = el.studentLink;
   input.select();
-  input.setSelectionRange(0, 99999); // для мобильных
+  input.setSelectionRange(0, 99999);
 
   try {
     navigator.clipboard.writeText(input.value).then(() => {
@@ -150,20 +153,29 @@ function loadResults() {
   el.tableWrap.hidden = true;
   el.resultsBody.innerHTML = '';
 
-  fetch(SCRIPT_URL + '?t=' + Date.now()) // кэш-бастер
+  if (!currentTopic) {
+    el.resultsStatus.textContent = 'Сначала выберите класс и тему, затем нажмите «Обновить».';
+    return;
+  }
+
+  const url = SCRIPT_URL
+    + '?work=' + encodeURIComponent(currentTopic.id)
+    + '&t=' + Date.now(); // кэш-бастер
+
+  fetch(url)
     .then(res => {
       if (!res.ok) throw new Error('HTTP ' + res.status);
       return res.json();
     })
     .then(rows => {
       if (!Array.isArray(rows) || rows.length === 0) {
-        el.resultsStatus.textContent = 'Пока нет ни одной выполненной работы.';
+        el.resultsStatus.textContent = 'Пока нет ни одной выполненной работы по этой теме.';
         el.resultsStatus.hidden = false;
         el.tableWrap.hidden = true;
         return;
       }
 
-      // Фильтруем по выбранному классу, если он указан
+      // Фильтрация по классу (на случай, если в листе есть данные разных классов)
       let filtered = rows;
       if (currentGrade) {
         filtered = rows.filter(r => String(r['Класс'] || '').trim() === currentGrade);
@@ -189,8 +201,11 @@ function loadResults() {
     });
 }
 
+/* ==========================================================
+   ТАБЛИЦА РЕЗУЛЬТАТОВ
+   ========================================================== */
+
 function renderResultsTable(rows) {
-  // Поля в том порядке, в котором они должны быть в таблице
   const columns = [
     'Дата', 'Фамилия', 'Имя', 'Класс', 'Буква',
     'З1', 'З2', 'З3', 'З4', 'З5', 'З6',
@@ -207,7 +222,6 @@ function renderResultsTable(rows) {
       const td = document.createElement('td');
       let value = row[col];
 
-      // Форматирование даты
       if (col === 'Дата' && value instanceof Date) {
         value = value.toLocaleString('ru-RU', {
           day: '2-digit', month: '2-digit', year: 'numeric',
@@ -219,7 +233,6 @@ function renderResultsTable(rows) {
 
       td.textContent = value;
 
-      // Подсветка оценки
       if (col === 'Оценка') {
         const mark = Number(value);
         if (mark === 5) td.classList.add('mark-5');
@@ -256,6 +269,5 @@ el.refreshBtn.addEventListener('click', loadResults);
    СТАРТ
    ========================================================== */
 
-// При загрузке страницы сразу показываем подсказку
 el.resultsStatus.textContent =
   'Выберите класс и тему, затем нажмите «Обновить», чтобы загрузить результаты.';
