@@ -571,6 +571,7 @@ function submitResults() {
   });
 
   const payload = {
+    work: '7-1sm',   
     lastName: state.student.lastName,
     firstName: state.student.firstName,
     grade: state.student.grade,
