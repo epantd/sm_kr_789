@@ -89,7 +89,7 @@ body {
 
 /* ---------- Задание ---------- */
 .task-topic { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin: 0 0 8px; }
-.task-instruction { margin: 0 0 18px; font-size: 16px; line-height: 1.55; color: #334155; white-space: pre-line; text-align: center; }
+.task-instruction { margin: 0 0 18px; font-size: 16px; line-height: 1.55; color: #334155; white-space: pre-line; }
 
 /* ---------- Таблица данных ---------- */
 .table-wrap {
@@ -101,12 +101,73 @@ body {
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: 13px;
+  text-align: center;
+  white-space: nowrap;
+}
+.data-table th { background: #f1f5fd; color: var(--muted); font-weight: 600; padding: 8px 6px; border-bottom: 2px solid var(--border); }
+.data-table td { padding: 7px 6px; border-bottom: 1px solid var(--border); color: #334155; }
+.data-table tbody tr:nth-child(even) { background: #f8fafc; }
+
+/* ---------- Подвопросы для БД ---------- */
+.db-questions {
+  margin-bottom: 18px;
+}
+.db-q-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  background: #f8fafc;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  border-left: 3px solid var(--accent);
+}
+.db-q-row .q-num {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 13px;
+}
+.db-q-row .q-text {
+  flex: 1;
+  font-size: 14.5px;
+  line-height: 1.4;
+  color: #334155;
+}
+.db-q-row .q-input {
+  flex-shrink: 0;
+  width: 70px;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 16px;
+  text-align: center;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 2px solid var(--border);
+  background: #fff;
+  color: var(--text);
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.db-q-row .q-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(79, 110, 247, .18);
+}
+
+.db-chart-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #334155;
+  margin: 0 0 12px;
   text-align: center;
 }
-.data-table th { background: #f1f5fd; color: var(--muted); font-weight: 600; padding: 10px 8px; border-bottom: 2px solid var(--border); }
-.data-table td { padding: 8px; border-bottom: 1px solid var(--border); color: #334155; }
-.data-table tbody tr:nth-child(even) { background: #f8fafc; }
 
 /* ---------- Граф (SVG) ---------- */
 .graph-container {
@@ -122,25 +183,6 @@ body {
 .graph-svg { max-width: 100%; height: auto; min-width: 500px; }
 
 /* ---------- Варианты ответа и ввод ---------- */
-.options { display: grid; gap: 10px; margin-bottom: 18px; }
-.option {
-  display: block;
-  width: 100%;
-  text-align: left;
-  font-family: inherit;
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--text);
-  background: #fff;
-  border: 2px solid var(--border);
-  border-radius: 12px;
-  padding: 13px 16px;
-  cursor: pointer;
-  transition: background .15s, border-color .15s, box-shadow .15s, transform .12s;
-}
-.option:hover { border-color: var(--accent); background: #f7f9ff; transform: translateY(-1px); }
-.option.selected { border-color: var(--accent); background: #eef3ff; box-shadow: 0 0 0 3px rgba(79, 110, 247, .18); }
-
 .input-wrap { display: flex; justify-content: center; margin-bottom: 18px; }
 .input-answer {
   width: 100%;
@@ -158,11 +200,11 @@ body {
 }
 .input-answer:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79, 110, 247, .18); }
 
-/* ---------- Диаграммы (выбор) ---------- */
+/* ---------- Диаграммы ---------- */
 .charts-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 16px;
+  gap: 12px;
   margin-bottom: 20px;
 }
 .chart-option {
@@ -178,8 +220,27 @@ body {
 }
 .chart-option:hover { border-color: var(--accent); background: #f7f9ff; }
 .chart-option.selected { border-color: var(--accent); background: #eef3ff; box-shadow: 0 0 0 3px rgba(79, 110, 247, .18); }
-.pie-svg { width: 100px; height: 100px; margin-bottom: 8px; }
-.pie-legend { font-size: 12px; color: var(--muted); text-align: center; line-height: 1.2; }
+.pie-svg { width: 100px; height: 100px; border-radius: 50%; margin-bottom: 8px; }
+.pie-legend {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.pie-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.pie-legend i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
 
 /* ---------- Кнопки ---------- */
 .actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
@@ -209,8 +270,9 @@ body {
 @media (max-width: 600px) {
   .card { padding: 16px; }
   .btn { padding: 11px 20px; font-size: 15px; }
-  .option { font-size: 15px; padding: 12px 14px; }
-  .data-table { font-size: 12px; }
+  .data-table { font-size: 11px; }
   .input-answer { font-size: 20px; padding: 12px; }
   .charts-grid { grid-template-columns: repeat(2, 1fr); }
+  .db-q-row { flex-wrap: wrap; }
+  .db-q-row .q-input { width: 60px; }
 }
