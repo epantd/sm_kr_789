@@ -50,89 +50,112 @@ function escapeHtml(s) {
 function generateTasks() {
   const tasks = [];
 
-  /* ---------- ЗАДАНИЕ 1: ввод / вывод ---------- */
+    /* ---------- ЗАДАНИЕ 1: устройства ввода ---------- */
   {
-    const isInput = Math.random() < 0.5;
-    const device = isInput ? pick(INPUT_DEVICES) : pick(OUTPUT_DEVICES);
-    tasks.push({
-      topic: 'Аппаратное обеспечение',
-      instruction: `Определите: устройство «${device}» является устройством ввода или вывода информации?`,
-      type: 'choice',
-      options: shuffle(['Устройство ввода', 'Устройство вывода']),
-      correct: isInput ? 'Устройство ввода' : 'Устройство вывода'
-    });
-  }
-
-  /* ---------- ЗАДАНИЕ 2: внутреннее / внешнее ---------- */
-  {
-    const isInternal = Math.random() < 0.5;
-    const device = isInternal ? pick(INTERNAL_DEVICES) : pick(EXTERNAL_DEVICES);
-    tasks.push({
-      topic: 'Аппаратное обеспечение',
-      instruction: `Устройство «${device}» — внутреннее (внутри системного блока) или внешнее?`,
-      type: 'choice',
-      options: shuffle(['Внутреннее', 'Внешнее']),
-      correct: isInternal ? 'Внутреннее' : 'Внешнее'
-    });
-  }
-
-  /* ---------- ЗАДАНИЕ 3: оперативная / долговременная ---------- */
-  {
-    const isRam = Math.random() < 0.5;
-    const device = isRam ? pick(RAM_DEVICES) : pick(STORAGE_DEVICES);
-    tasks.push({
-      topic: 'Аппаратное обеспечение',
-      instruction: `«${device}» — это оперативная (временная) или долговременная (постоянная) память?`,
-      type: 'choice',
-      options: shuffle(['Оперативная (временная)', 'Долговременная (постоянная)']),
-      correct: isRam ? 'Оперативная (временная)' : 'Долговременная (постоянная)'
-    });
-  }
-
-  /* ---------- ЗАДАНИЕ 4: мультивыбор — все устройства ввода ИЛИ вывода ---------- */
-  {
-    const wantInput = Math.random() < 0.5;
-    const pool = wantInput ? INPUT_DEVICES : OUTPUT_DEVICES;
-    const otherPool = wantInput ? OUTPUT_DEVICES : INPUT_DEVICES;
-
-    const correctList = pickN(pool, 3);
-    const wrongList = pickN(otherPool, 2);
+    const correctCount = randInt(3, 4);
+    const correctList = pickN(INPUT_DEVICES, correctCount);
+    const wrongPool = [...OUTPUT_DEVICES, ...INTERNAL_DEVICES, ...PORTS]
+      .filter(x => !correctList.includes(x));
+    const wrongList = pickN(wrongPool, 8 - correctCount);
     const all = shuffle([...correctList, ...wrongList]);
-
     tasks.push({
       topic: 'Аппаратное обеспечение',
-      instruction: `Выберите ВСЕ устройства ${wantInput ? 'ВВОДА' : 'ВЫВОДА'} информации.`,
+      instruction: 'Выберите ВСЕ устройства ВВОДА информации (правильных вариантов может быть несколько).',
       type: 'multi',
       options: all,
       correct: correctList
     });
   }
 
-  /* ---------- ЗАДАНИЕ 5: мультивыбор — все ПОРТЫ ---------- */
+  /* ---------- ЗАДАНИЕ 2: устройства вывода ---------- */
   {
-    const correctList = pickN(PORTS, 3);
-    const wrongList = pickN(NOT_PORTS, 2);
+    const correctCount = randInt(3, 4);
+    const correctList = pickN(OUTPUT_DEVICES, correctCount);
+    const wrongPool = [...INPUT_DEVICES, ...INTERNAL_DEVICES, ...PORTS]
+      .filter(x => !correctList.includes(x));
+    const wrongList = pickN(wrongPool, 8 - correctCount);
     const all = shuffle([...correctList, ...wrongList]);
-
     tasks.push({
       topic: 'Аппаратное обеспечение',
-      instruction: 'Выберите ВСЕ порты (разъёмы) компьютера.',
+      instruction: 'Выберите ВСЕ устройства ВЫВОДА информации (правильных вариантов может быть несколько).',
       type: 'multi',
       options: all,
       correct: correctList
     });
   }
 
-  /* ---------- ЗАДАНИЕ 6: порт или не порт ---------- */
+  /* ---------- ЗАДАНИЕ 3: внутренние устройства ---------- */
   {
-    const isPort = Math.random() < 0.5;
-    const item = isPort ? pick(PORTS) : pick(NOT_PORTS);
+    const correctCount = randInt(3, 4);
+    const correctList = pickN(INTERNAL_DEVICES, correctCount);
+    const wrongPool = [...INPUT_DEVICES, ...OUTPUT_DEVICES, ...PORTS]
+      .filter(x => !correctList.includes(x));
+    const wrongList = pickN(wrongPool, 8 - correctCount);
+    const all = shuffle([...correctList, ...wrongList]);
     tasks.push({
       topic: 'Аппаратное обеспечение',
-      instruction: `«${item}» — это порт (разъём) компьютера?`,
-      type: 'choice',
-      options: shuffle(['Да, это порт', 'Нет, это не порт']),
-      correct: isPort ? 'Да, это порт' : 'Нет, это не порт'
+      instruction: 'Выберите ВСЕ ВНУТРЕННИЕ устройства (находятся внутри системного блока, правильных вариантов может быть несколько).',
+      type: 'multi',
+      options: all,
+      correct: correctList
+    });
+  }
+
+  /* ---------- ЗАДАНИЕ 4: внешние устройства ---------- */
+  {
+    const correctCount = randInt(3, 4);
+    const correctList = pickN(EXTERNAL_DEVICES, correctCount);
+    const wrongPool = [...INTERNAL_DEVICES, ...PORTS]
+      .filter(x => !correctList.includes(x));
+    const wrongList = pickN(wrongPool, 8 - correctCount);
+    const all = shuffle([...correctList, ...wrongList]);
+    tasks.push({
+      topic: 'Аппаратное обеспечение',
+      instruction: 'Выберите ВСЕ ВНЕШНИЕ устройства (подключаются снаружи к системному блоку, правильных вариантов может быть несколько).',
+      type: 'multi',
+      options: all,
+      correct: correctList
+    });
+  }
+
+  /* ---------- ЗАДАНИЕ 5: долговременная память / хранение ---------- */
+  {
+    const correctCount = randInt(3, 4);
+    const correctList = pickN(STORAGE_DEVICES, correctCount);
+    const wrongPool = [
+      ...INPUT_DEVICES,
+      ...OUTPUT_DEVICES,
+      'Процессор', 'Оперативная память', 'Видеокарта',
+      ...PORTS
+    ].filter(x => !correctList.includes(x));
+    const wrongList = pickN(wrongPool, 8 - correctCount);
+    const all = shuffle([...correctList, ...wrongList]);
+    tasks.push({
+      topic: 'Аппаратное обеспечение',
+      instruction: 'Выберите ВСЕ устройства ДОЛГОВРЕМЕННОЙ (постоянной) памяти для хранения информации (правильных вариантов может быть несколько).',
+      type: 'multi',
+      options: all,
+      correct: correctList
+    });
+  }
+
+  /* ---------- ЗАДАНИЕ 6: порты компьютера ---------- */
+  {
+    const correctCount = randInt(3, 4);
+    const correctList = pickN(PORTS, correctCount);
+    const wrongPool = [
+      ...INPUT_DEVICES,
+      ...OUTPUT_DEVICES,
+      'Процессор', 'Оперативная память', 'Видеокарта', 'Материнская плата', 'Кулер'
+    ].filter(x => !correctList.includes(x));
+    const wrongList = pickN(wrongPool, 8 - correctCount);
+    const all = shuffle([...correctList, ...wrongList]);
+    tasks.push({
+      topic: 'Аппаратное обеспечение',
+      instruction: 'Выберите ВСЕ ПОРТЫ (разъёмы) компьютера (правильных вариантов может быть несколько).',
+      type: 'multi',
+      options: all,
+      correct: correctList
     });
   }
 
