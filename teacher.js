@@ -4,11 +4,8 @@
    КОНФИГУРАЦИЯ
    ========================================================== */
 
-// URL развернутого веб-приложения Google Apps Script
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyF2x-qnIPerEebab8j4PXEr_U7csUGruQROCLgsKYGRUgeBvMjiHnBSEfpGhE881Wk/exec';
 
-// Список тем по классам.
-// id = идентификатор листа в Google Sheets (work)
 const TOPICS = {
   '7': [
     {
@@ -41,6 +38,7 @@ const el = {
   studentLink:    document.getElementById('studentLink'),
   copyLinkBtn:    document.getElementById('copyLinkBtn'),
   refreshBtn:     document.getElementById('refreshBtn'),
+  letterFilter:   document.getElementById('letterFilter'),
   resultsStatus:  document.getElementById('resultsStatus'),
   tableWrap:      document.getElementById('tableWrap'),
   resultsBody:    document.getElementById('resultsBody')
@@ -52,6 +50,7 @@ const el = {
 
 let currentGrade = null;
 let currentTopic = null;
+let lastLoadedRows = [];   // строки, полученные из Google Sheets
 
 /* ==========================================================
    СПИСОК ТЕМ
@@ -106,24 +105,19 @@ function updateShowLinkButton() {
 }
 
 /* ==========================================================
-   ПОКАЗ ССЫЛКИ
+   ПОКАЗ И КОПИРОВАНИЕ ССЫЛКИ
    ========================================================== */
 
 function showStudentLink() {
   if (!currentTopic) return;
 
-  const base = window.location.href.replace(/[^/]*$/, ''); // убираем имя файла
+  const base = window.location.href.replace(/[^/]*$/, '');
   const fullUrl = base + currentTopic.path;
 
   el.studentLink.value = fullUrl;
   el.linkBox.hidden = false;
-
   el.linkBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
-
-/* ==========================================================
-   КОПИРОВАНИЕ ССЫЛКИ
-   ========================================================== */
 
 function copyStudentLink() {
   const input = el.studentLink;
@@ -144,23 +138,26 @@ function copyStudentLink() {
 }
 
 /* ==========================================================
-   ЗАГРУЗКА РЕЗУЛЬТАТОВ ИЗ GOOGLE SHEETS
+   ЗАГРУЗКА РЕЗУЛЬТАТОВ
    ========================================================== */
 
 function loadResults() {
+  if (!currentTopic) {
+    el.resultsStatus.textContent = 'Сначала выберите класс и тему, затем нажмите «Обновить».';
+    el.resultsStatus.hidden = false;
+    el.tableWrap.hidden = true;
+    return;
+  }
+
   el.resultsStatus.textContent = 'Загрузка данных…';
   el.resultsStatus.hidden = false;
   el.tableWrap.hidden = true;
   el.resultsBody.innerHTML = '';
-
-  if (!currentTopic) {
-    el.resultsStatus.textContent = 'Сначала выберите класс и тему, затем нажмите «Обновить».';
-    return;
-  }
+  lastLoadedRows = [];
 
   const url = SCRIPT_URL
     + '?work=' + encodeURIComponent(currentTopic.id)
-    + '&t=' + Date.now(); // кэш-бастер
+    + '&t=' + Date.now();
 
   fetch(url)
     .then(res => {
@@ -174,23 +171,8 @@ function loadResults() {
         el.tableWrap.hidden = true;
         return;
       }
-
-      // Фильтрация по классу (на случай, если в листе есть данные разных классов)
-      let filtered = rows;
-      if (currentGrade) {
-        filtered = rows.filter(r => String(r['Класс'] || '').trim() === currentGrade);
-      }
-
-      if (filtered.length === 0) {
-        el.resultsStatus.textContent = 'Для выбранного класса пока нет результатов.';
-        el.resultsStatus.hidden = false;
-        el.tableWrap.hidden = true;
-        return;
-      }
-
-      renderResultsTable(filtered);
-      el.resultsStatus.hidden = true;
-      el.tableWrap.hidden = false;
+      lastLoadedRows = rows;
+      applyFilters();
     })
     .catch(err => {
       console.error(err);
@@ -199,6 +181,47 @@ function loadResults() {
       el.resultsStatus.hidden = false;
       el.tableWrap.hidden = true;
     });
+}
+
+/* ==========================================================
+   ПРИМЕНЕНИЕ ФИЛЬТРОВ (класс + буква)
+   ========================================================== */
+
+function applyFilters() {
+  if (lastLoadedRows.length === 0) {
+    el.resultsStatus.textContent = 'Нет загруженных данных. Нажмите «Обновить».';
+    el.resultsStatus.hidden = false;
+    el.tableWrap.hidden = true;
+    return;
+  }
+
+  const grade = currentGrade;
+  const letter = (el.letterFilter.value || '').toUpperCase();
+
+  let filtered = lastLoadedRows;
+
+  if (grade) {
+    filtered = filtered.filter(r => String(r['Класс'] || '').trim() === grade);
+  }
+
+  if (letter) {
+    filtered = filtered.filter(r =>
+      String(r['Буква'] || '').trim().toUpperCase() === letter
+    );
+  }
+
+  if (filtered.length === 0) {
+    el.resultsStatus.textContent = letter
+      ? `Нет результатов для ${grade || ''} класса с буквой «${letter}».`
+      : `Для выбранного класса пока нет результатов.`;
+    el.resultsStatus.hidden = false;
+    el.tableWrap.hidden = true;
+    return;
+  }
+
+  renderResultsTable(filtered);
+  el.resultsStatus.hidden = true;
+  el.tableWrap.hidden = false;
 }
 
 /* ==========================================================
@@ -255,6 +278,12 @@ function renderResultsTable(rows) {
 el.gradeSelect.addEventListener('change', () => {
   updateTopicOptions();
   updateShowLinkButton();
+
+  // При смене класса сбрасываем фильтр буквы
+  el.letterFilter.value = '';
+
+  // Если данные уже были загружены — перефильтруем по новому классу
+  if (lastLoadedRows.length > 0) applyFilters();
 });
 
 el.topicSelect.addEventListener('change', updateShowLinkButton);
@@ -263,7 +292,11 @@ el.showLinkBtn.addEventListener('click', showStudentLink);
 
 el.copyLinkBtn.addEventListener('click', copyStudentLink);
 
+// Кнопка «Обновить» — перезагружает данные из Sheets
 el.refreshBtn.addEventListener('click', loadResults);
+
+// Фильтр по букве — перефильтровывает уже загруженные данные без повторного запроса
+el.letterFilter.addEventListener('change', applyFilters);
 
 /* ==========================================================
    СТАРТ
