@@ -246,3 +246,43 @@ body {
   .results-table { font-size: 11px; }
   .results-table th, .results-table td { padding: 6px 4px; }
 }
+
+/* ---------- Дополнительные элементы управления в результатах ---------- */
+.results-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.field-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.field-inline select {
+  font-family: inherit;
+  font-size: 14px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 2px solid var(--border);
+  background: #fff;
+  color: var(--text);
+  outline: none;
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s;
+  min-width: 80px;
+}
+.field-inline select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(79, 110, 247, .18);
+}
+
+@media (max-width: 600px) {
+  .results-controls { width: 100%; justify-content: space-between; }
+  .field-inline { flex: 1 1 auto; }
+}
