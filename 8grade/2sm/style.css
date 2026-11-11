@@ -1,0 +1,336 @@
+* { box-sizing: border-box; }
+
+:root {
+  --bg: #eef2f9;
+  --card-bg: #ffffff;
+  --text: #1e293b;
+  --muted: #64748b;
+  --accent: #4f6ef7;
+  --accent-dark: #3b57d6;
+  --green: #16a34a;
+  --green-bg: #dcfce7;
+  --red: #dc2626;
+  --red-bg: #fee2e2;
+  --amber: #b45309;
+  --amber-bg: #fef3c7;
+  --border: #dbe3ef;
+  --radius: 16px;
+  --shadow: 0 10px 30px rgba(30, 41, 59, .08);
+}
+
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', system-ui, -apple-system, 'Roboto', 'Helvetica Neue', sans-serif;
+  background: radial-gradient(1200px 600px at 50% -10%, #e0e9ff 0%, var(--bg) 45%);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 24px 16px 60px;
+}
+
+.app { max-width: 900px; margin: 0 auto; }
+
+.app-header { text-align: center; margin-bottom: 24px; }
+
+.app-header h1 {
+  font-size: clamp(22px, 4vw, 30px);
+  margin: 0 0 8px;
+  letter-spacing: -.02em;
+}
+.app-subtitle { color: var(--muted); font-size: 15px; margin: 0 0 20px; }
+
+/* ---------- Карточка ---------- */
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 28px;
+  animation: fadeIn .3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.instruction { margin: 0 0 18px; font-size: 16px; line-height: 1.55; color: #334155; }
+
+/* ---------- Форма ---------- */
+.form { display: grid; gap: 14px; margin-bottom: 16px; }
+
+.field { display: grid; gap: 6px; }
+.field > span {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.field input,
+.field select {
+  font-family: inherit;
+  font-size: 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 2px solid var(--border);
+  background: #fff;
+  color: var(--text);
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.field input:focus,
+.field select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(79, 110, 247, .18);
+}
+
+.form-note {
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  background: var(--amber-bg);
+  color: var(--amber);
+  border-radius: 10px;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+/* ---------- Прогресс ---------- */
+.progress-wrap { max-width: 420px; margin: 0 auto; }
+.progress-text { font-size: 14px; color: var(--muted); margin-bottom: 8px; font-weight: 600; }
+.progress-bar {
+  height: 10px;
+  background: #dbe3f2;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #6a8bff, var(--accent));
+  border-radius: 999px;
+  transition: width .35s ease;
+}
+
+/* ---------- Задание ---------- */
+.task-topic {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 8px;
+}
+.task-instruction {
+  margin: 0 0 18px;
+  font-size: 16px;
+  line-height: 1.55;
+  color: #334155;
+  white-space: pre-line;
+}
+
+.expr-badge {
+  display: inline-block;
+  font-family: 'Cambria Math', Georgia, serif;
+  font-size: clamp(16px, 2.8vw, 22px);
+  font-weight: 600;
+  padding: 12px 20px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f4f7ff, #e8efff);
+  border: 1px solid #d5e0ff;
+  color: #2b3a7a;
+  margin-bottom: 18px;
+  letter-spacing: .02em;
+  word-break: break-word;
+}
+
+/* ---------- Варианты ответа ---------- */
+.options { display: grid; gap: 10px; margin-bottom: 18px; }
+
+.option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text);
+  background: #fff;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 13px 16px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, box-shadow .15s, transform .12s;
+}
+.option:hover { border-color: var(--accent); background: #f7f9ff; transform: translateY(-1px); }
+.option.selected { border-color: var(--accent); background: #eef3ff; box-shadow: 0 0 0 3px rgba(79, 110, 247, .18); }
+
+/* ---------- Текстовый ввод ---------- */
+.input-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+.input-answer {
+  width: 100%;
+  max-width: 300px;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 22px;
+  text-align: center;
+  padding: 14px 20px;
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  background: #fff;
+  color: var(--text);
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.input-answer:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(79, 110, 247, .18);
+}
+
+/* ---------- Таблица истинности ---------- */
+.table-wrap {
+  overflow-x: auto;
+  margin-bottom: 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.truth-table {
+  border-collapse: collapse;
+  margin: 0 auto;
+  font-family: 'Cambria Math', Georgia, serif;
+  font-size: 15px;
+}
+
+.truth-table th,
+.truth-table td {
+  border: 1px solid var(--border);
+  padding: 0;
+  text-align: center;
+  min-width: 48px;
+  height: 40px;
+}
+
+.truth-table thead th {
+  background: #f1f5fd;
+  font-weight: 600;
+  color: #334155;
+  padding: 6px 6px;
+  vertical-align: middle;
+  font-family: 'Cambria Math', Georgia, serif;
+}
+
+.op-col .step-num {
+  display: block;
+  font-size: 11px;
+  color: var(--accent);
+  font-weight: 700;
+  font-family: system-ui, sans-serif;
+  margin-bottom: 2px;
+}
+.op-col .op-text {
+  display: block;
+  font-size: 13px;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.2;
+  max-width: 120px;
+}
+
+.var-cell {
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 600;
+}
+
+.cell-input {
+  display: block;
+  width: 100%;
+  min-width: 48px;
+  height: 40px;
+  border: none;
+  outline: none;
+  background: transparent;
+  text-align: center;
+  font-family: inherit;
+  font-size: 16px;
+  color: #1e293b;
+  padding: 0;
+}
+.cell-input:focus { background: #eef4ff; box-shadow: inset 0 0 0 2px var(--accent); }
+.cell-input:disabled { cursor: default; }
+
+/* ---------- Перетаскиваемые шапки (drag_truth) ---------- */
+.slot { cursor: pointer; position: relative; transition: background .15s, box-shadow .15s; user-select: none; }
+.slot.over { background: #e0e9ff; box-shadow: inset 0 0 0 2px var(--accent); }
+.slot.filled { background: #eef3ff; }
+.slot.slot-selected { box-shadow: inset 0 0 0 3px var(--accent); background: #e0e9ff; }
+
+.slot-num {
+  display: block;
+  font-size: 11px;
+  font-family: system-ui, sans-serif;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.slot-content {
+  display: block;
+  font-family: 'Cambria Math', Georgia, serif;
+  font-size: 13px;
+  word-break: break-word;
+  line-height: 1.2;
+}
+
+/* ---------- Кнопки ---------- */
+.actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+.btn {
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 12px 26px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform .12s ease, background .2s ease, box-shadow .2s ease;
+}
+.btn:active { transform: translateY(1px); }
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(79, 110, 247, .35);
+}
+.btn-primary:hover { background: var(--accent-dark); }
+
+/* ---------- Обратная связь ---------- */
+.feedback {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 6px 0 14px;
+  min-height: 20px;
+  color: var(--amber);
+}
+
+/* ---------- Финал ---------- */
+.finish { text-align: center; padding: 48px 24px; }
+.finish-emoji { font-size: 56px; margin-bottom: 12px; }
+.finish h2 { margin: 0 0 12px; }
+.finish p { color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+
+/* ---------- Мобильные ---------- */
+@media (max-width: 600px) {
+  .card { padding: 18px; }
+  .btn { padding: 11px 20px; font-size: 15px; }
+  .option { font-size: 15px; padding: 12px 14px; }
+  .truth-table { font-size: 13px; }
+  .truth-table th, .truth-table td { min-width: 40px; }
+  .cell-input { min-width: 40px; height: 36px; font-size: 14px; }
+  .op-col .op-text { font-size: 11px; max-width: 90px; }
+  .input-answer { font-size: 20px; padding: 12px; }
+}
