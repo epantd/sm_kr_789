@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Панель учителя · Самостоятельные работы</title>
+<link rel="stylesheet" href="teacher.css">
+</head>
+<body>
+<div class="app">
+
+  <header class="app-header">
+    <h1>📋 Панель учителя</h1>
+    <p class="app-subtitle">Выберите класс и тему, чтобы получить ссылку для учеников и посмотреть результаты.</p>
+  </header>
+
+  <main>
+
+    <!-- БЛОК УПРАВЛЕНИЯ -->
+    <section class="card controls-card">
+      <div class="controls-row">
+        <label class="field">
+          <span>Класс</span>
+          <select id="gradeSelect">
+            <option value="">— выберите —</option>
+            <option value="7">7 класс</option>
+            <option value="8">8 класс</option>
+            <option value="9">9 класс</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Тема</span>
+          <select id="topicSelect" disabled>
+            <option value="">— сначала выберите класс —</option>
+          </select>
+        </label>
+
+        <div class="field field-btn">
+          <span>&nbsp;</span>
+          <button type="button" class="btn btn-primary" id="showLinkBtn" disabled>
+            Показать ссылку
+          </button>
+        </div>
+      </div>
+
+      <!-- Блок со ссылкой -->
+      <div class="link-box" id="linkBox" hidden>
+        <p class="link-label">Ссылка для учеников:</p>
+        <div class="link-row">
+          <input type="text" id="studentLink" readonly>
+          <button type="button" class="btn btn-outline" id="copyLinkBtn">Скопировать</button>
+        </div>
+        <p class="link-hint">Раздайте эту ссылку ученикам. Они откроют её на компьютере и выполнят работу.</p>
+      </div>
+    </section>
+
+    <!-- БЛОК РЕЗУЛЬТАТОВ -->
+    <section class="card results-card">
+      <div class="results-header">
+        <h2>Результаты</h2>
+        <button type="button" class="btn btn-outline" id="refreshBtn">
+          🔄 Обновить
+        </button>
+      </div>
+
+      <div class="results-status" id="resultsStatus">
+        Выберите тему и нажмите «Обновить», чтобы загрузить данные.
+      </div>
+
+      <div class="table-wrap" id="tableWrap" hidden>
+        <table class="results-table" id="resultsTable">
+          <thead>
+            <tr>
+              <th>Дата</th>
+              <th>Фамилия</th>
+              <th>Имя</th>
+              <th>Класс</th>
+              <th>Буква</th>
+              <th>З1</th><th>З2</th><th>З3</th><th>З4</th><th>З5</th><th>З6</th>
+              <th>З7</th><th>З8</th><th>З9</th><th>З10</th><th>З11</th><th>З12</th>
+              <th>Итого</th>
+              <th>Оценка</th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+</div>
+<script src="teacher.js"></script>
+</body>
+</html>
