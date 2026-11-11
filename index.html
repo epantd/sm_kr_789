@@ -59,9 +59,22 @@
     <section class="card results-card">
       <div class="results-header">
         <h2>Результаты</h2>
-        <button type="button" class="btn btn-outline" id="refreshBtn">
-          🔄 Обновить
-        </button>
+        <div class="results-controls">
+          <label class="field-inline">
+            <span>Буква класса:</span>
+            <select id="letterFilter">
+              <option value="">Все</option>
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
+              <option value="D">D</option>
+              <option value="E">E</option>
+            </select>
+          </label>
+          <button type="button" class="btn btn-outline" id="refreshBtn">
+            🔄 Обновить
+          </button>
+        </div>
       </div>
 
       <div class="results-status" id="resultsStatus">
