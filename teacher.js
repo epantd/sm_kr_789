@@ -21,8 +21,12 @@ const TOPICS = {
       path: '8grade/2sm/index.html'
     }
   ],
-  '9': [
-    // сюда можно добавлять темы для 9 класса
+    '9': [
+    {
+      id: '9-3sm',
+      title: 'Самостоятельная работа 1 · БД и Графы',
+      path: '9grade/3sm/index.html'
+    }
   ]
 };
 
