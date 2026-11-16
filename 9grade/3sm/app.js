@@ -43,7 +43,6 @@ const DB_COLUMNS = [
   { key: 'eng',    label: 'Английский' }
 ];
 
-// Конфигурация 4 заданий: 3 вопроса с фильтрами
 const DB_TASK_CONFIGS = [
   [
     { text: 'Из Москвы получили «5» по математике', fn: s => s.city === 'Москва' && s.math === 5 },
@@ -105,11 +104,19 @@ function generateDBTask(taskIndex) {
 function renderDBTaskHTML(task) {
   let html = '';
 
-  // Панель над таблицей
+  // ВЕРХНЯЯ ПАНЕЛЬ: Вставка, Сортировка, Фильтр, Сбросить (как в тренажёре)
   html += '<div class="data-toolbar">';
   html += '<span class="data-toolbar-label">Таблица данных</span>';
-  html += '<button type="button" class="toolbar-btn" data-action="filter">🫙 Фильтр</button>';
-  html += '</div>';
+  html += '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">';
+  html += '<div class="menu-wrapper">';
+  html += '<button type="button" class="toolbar-btn" id="insertMainBtn">Вставка ▾</button>';
+  html += '<div class="dropdown-menu" id="insertMainMenu" hidden>';
+  html += '<button type="button" class="dropdown-item" id="insertMainChart">📊 Диаграмма...</button>';
+  html += '</div></div>';
+  html += '<button type="button" class="toolbar-btn" id="sortMainBtn">↕ Сортировка</button>';
+  html += '<button type="button" class="toolbar-btn" id="filterMainBtn">🔽 Фильтр</button>';
+  html += '<button type="button" class="toolbar-btn" id="resetMainBtn">✖ Сбросить</button>';
+  html += '</div></div>';
 
   // Таблица
   html += '<div class="table-wrap"><table class="data-table" id="dbTable"><thead><tr>';
@@ -121,8 +128,8 @@ function renderDBTaskHTML(task) {
   html += '</tr></thead><tbody></tbody></table></div>';
   html += '<p class="table-info" id="dbTableInfo"></p>';
 
-  // Вопросы и мини-таблица
-  html += '<p class="task-instruction" style="margin-top:16px;">Подсчитайте с помощью фильтров и впишите значения:</p>';
+  // Мини-таблица с вопросами
+  html += '<p class="task-instruction" style="margin-top:16px;">Подсчитайте с помощью фильтров и впишите значения в мини-таблицу:</p>';
   html += '<table class="mini-table" id="dbMiniTable"><thead><tr><th>№</th><th>Вопрос</th><th>Ответ</th></tr></thead><tbody>';
   task.subQuestions.forEach((q, i) => {
     html += `<tr>
@@ -133,43 +140,32 @@ function renderDBTaskHTML(task) {
   });
   html += '</tbody></table>';
 
-  // Панель диаграммы
-  html += `<div class="mini-toolbar">
-             <div class="menu-wrapper">
-               <button type="button" class="toolbar-btn" id="insertMenuBtn">Вставка ▾</button>
-               <div class="dropdown-menu" id="insertMenu" hidden>
-                 <button type="button" class="dropdown-item" id="insertChartItem">📊 Диаграмма...</button>
-               </div>
-             </div>
-             <span class="table-select-status" id="selStatus" style="font-size:13px;color:var(--muted);">○ Мини-таблица не выделена</span>
-           </div>`;
+  // Подсказка
+  html += '<p class="table-info" style="text-align:center;color:var(--muted);">Выделите мини-таблицу (кликните по ней), затем нажмите «Вставка → Диаграмма...» в верхней панели.</p>';
 
+  // Контейнер диаграммы
   html += '<div id="dbChartContainer"></div>';
 
   return html;
 }
 
-/* ---------- Логика БД-задания (замыкание) ---------- */
+/* ---------- Логика БД-задания ---------- */
 
 function attachDBEvents(task, ansObj) {
-  const taskIndex = state.index;
   const students = task.students;
 
-  // Состояние фильтров (локальное)
   const stateFilters = {};
   const selectedHeaders = new Set();
   const filterHeaders = new Set();
   let sortCol = null, sortDir = 'asc';
   let miniTableSelected = false;
-  let chartBuilt = false;
-  let chartType = null;
 
   const tableEl = document.getElementById('dbTable');
   const tbody = tableEl.querySelector('tbody');
   const infoEl = document.getElementById('dbTableInfo');
   const miniTableEl = document.getElementById('dbMiniTable');
-  const selStatus = document.getElementById('selStatus');
   const chartContainer = document.getElementById('dbChartContainer');
+  const insertMenu = document.getElementById('insertMainMenu');
 
   // Отрисовка строк
   function renderRows() {
@@ -202,34 +198,17 @@ function attachDBEvents(task, ansObj) {
     infoEl.textContent = `Показано строк: ${data.length}`;
   }
 
-  // Перестройка шапки при изменении фильтров
+  // Обновление шапки (выделение + фильтры)
   function renderHeader() {
     tableEl.querySelectorAll('th.header-cell').forEach(th => {
       const col = th.dataset.col;
       th.classList.toggle('selected-header', selectedHeaders.has(col));
 
       const thInner = th.querySelector('.th-inner');
-      // Удаляем старые элементы фильтра
-      thInner.querySelectorAll('.filter-select, .sort-btn').forEach(x => x.remove());
+      // Удаляем старые селекты
+      thInner.querySelectorAll('.filter-select').forEach(x => x.remove());
 
-      // Кнопка сортировки
-      let icon = '↕';
-      if (sortCol === col) icon = sortDir === 'asc' ? '↑' : '↓';
-      const sortBtn = document.createElement('button');
-      sortBtn.type = 'button';
-      sortBtn.className = 'sort-btn';
-      sortBtn.style.cssText = 'background:none;border:none;cursor:pointer;color:var(--accent);font-size:14px;padding:0 2px;';
-      sortBtn.textContent = icon;
-      sortBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (sortCol === col) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
-        else { sortCol = col; sortDir = 'asc'; }
-        renderHeader();
-        renderRows();
-      });
-      thInner.appendChild(sortBtn);
-
-      // Выпадающий фильтр
+      // Выпадающий фильтр — только если фильтр включён
       if (filterHeaders.has(col)) {
         const uniq = [...new Set(students.map(s => s[col]))].sort();
         const sel = document.createElement('select');
@@ -252,7 +231,7 @@ function attachDBEvents(task, ansObj) {
   // Клик по заголовку — выделение
   tableEl.querySelectorAll('th.header-cell').forEach(th => {
     th.addEventListener('click', (e) => {
-      if (e.target.closest('.sort-btn') || e.target.closest('.filter-select')) return;
+      if (e.target.closest('.filter-select')) return;
       const col = th.dataset.col;
       if (selectedHeaders.has(col)) selectedHeaders.delete(col);
       else selectedHeaders.add(col);
@@ -261,7 +240,7 @@ function attachDBEvents(task, ansObj) {
   });
 
   // Кнопка «Фильтр»
-  document.querySelector('[data-action="filter"]').addEventListener('click', () => {
+  document.getElementById('filterMainBtn').addEventListener('click', () => {
     if (selectedHeaders.size === 0) {
       if (filterHeaders.size > 0) {
         filterHeaders.clear();
@@ -279,40 +258,44 @@ function attachDBEvents(task, ansObj) {
     }
   });
 
-  // Мини-таблица: клик — выделение
-  miniTableEl.addEventListener('click', (e) => {
-    if (e.target.tagName === 'INPUT') return;
-    miniTableSelected = true;
-    miniTableEl.classList.add('selected');
-    selStatus.textContent = '✓ Мини-таблица выделена';
-    selStatus.style.color = 'var(--green)';
+  // Кнопка «Сортировка» (по последнему выделенному столбцу)
+  document.getElementById('sortMainBtn').addEventListener('click', () => {
+    const lastCol = [...selectedHeaders].pop();
+    if (!lastCol) {
+      alert('Сначала выделите столбец (кликните по заголовку), затем нажмите «Сортировка».');
+      return;
+    }
+    if (sortCol === lastCol) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+    else { sortCol = lastCol; sortDir = 'asc'; }
+    renderRows();
   });
-  miniTableEl.querySelectorAll('.table-input').forEach(inp => {
-    inp.addEventListener('focus', () => {
-      miniTableSelected = true;
-      miniTableEl.classList.add('selected');
-      selStatus.textContent = '✓ Мини-таблица выделена';
-      selStatus.style.color = 'var(--green)';
-    });
+
+  // Кнопка «Сбросить»
+  document.getElementById('resetMainBtn').addEventListener('click', () => {
+    filterHeaders.clear();
+    selectedHeaders.clear();
+    for (const k in stateFilters) delete stateFilters[k];
+    sortCol = null;
+    renderHeader();
+    renderRows();
   });
 
   // Меню «Вставка»
-  const menuBtn = document.getElementById('insertMenuBtn');
-  const menu = document.getElementById('insertMenu');
-  menuBtn.addEventListener('click', (e) => {
+  const insertBtn = document.getElementById('insertMainBtn');
+  insertBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    menu.hidden = !menu.hidden;
+    insertMenu.hidden = !insertMenu.hidden;
   });
-  document.getElementById('insertChartItem').addEventListener('click', (e) => {
+
+  document.getElementById('insertMainChart').addEventListener('click', (e) => {
     e.stopPropagation();
-    menu.hidden = true;
+    insertMenu.hidden = true;
 
     if (!miniTableSelected) {
       alert('Сначала выделите мини-таблицу (кликните по ней).');
       return;
     }
 
-    // Проверяем, что все 3 значения введены
     const inputs = miniTableEl.querySelectorAll('.table-input');
     const vals = [];
     let allFilled = true;
@@ -322,38 +305,47 @@ function attachDBEvents(task, ansObj) {
       vals.push(v);
     });
     if (!allFilled) {
-      alert('Сначала заполните все три ячейки ответов, затем постройте диаграмму.');
+      alert('Заполните все три ячейки ответов перед построением диаграммы.');
       return;
     }
 
     openChartWizard({
-      values: vals.map(v => parseInt(v, 10) || 0),
       onInsert: (type) => {
-        chartType = type;
-        chartBuilt = true;
+        ansObj.chartBuilt = true;
+        ansObj.chartType = type;
         if (type === 'pie') {
           chartContainer.innerHTML = buildPieHTML(vals.map(v => parseInt(v, 10) || 0));
         } else {
-          chartContainer.innerHTML = `<p style="text-align:center;color:var(--muted);">Выбрана диаграмма типа «${type}». Для задания нужна круговая.</p>`;
+          chartContainer.innerHTML = '<p style="text-align:center;color:var(--muted);">Выбрана диаграмма типа «' + type + '». Для этого задания нужна круговая.</p>';
         }
-        // Сохраняем ответ
-        ansObj.chartBuilt = true;
-        ansObj.chartType = type;
       }
     });
   });
 
-  // Клик вне меню — закрыть
-  document.addEventListener('click', () => { menu.hidden = true; }, { once: true });
+  // Выделение мини-таблицы
+  miniTableEl.addEventListener('click', (e) => {
+    if (e.target.tagName === 'INPUT') return;
+    miniTableSelected = true;
+    miniTableEl.classList.add('selected');
+  });
+  miniTableEl.querySelectorAll('.table-input').forEach(inp => {
+    inp.addEventListener('focus', () => {
+      miniTableSelected = true;
+      miniTableEl.classList.add('selected');
+    });
+  });
+
+  // Закрытие меню по клику вне
+  document.addEventListener('click', () => { insertMenu.hidden = true; }, { once: true });
 
   // Первичная отрисовка
   renderHeader();
   renderRows();
 }
 
-/* ---------- Мастер диаграмм ---------- */
+/* ---------- Мастер диаграмм (без предвыбранной круговой) ---------- */
 
-function openChartWizard({ values, onInsert }) {
+function openChartWizard({ onInsert }) {
   const ov = document.createElement('div');
   ov.className = 'modal-overlay';
   ov.innerHTML = `
@@ -363,9 +355,10 @@ function openChartWizard({ values, onInsert }) {
       <p style="font-size:13px;color:var(--muted);margin:0 0 12px;">Выберите тип диаграммы:</p>
       <div class="chart-type-options">
         <label class="chart-type-option"><input type="radio" name="ct" value="bar"><span>📊 Столбчатая</span></label>
-        <label class="chart-type-option"><input type="radio" name="ct" value="pie" checked><span>🥧 Круговая</span></label>
+        <label class="chart-type-option"><input type="radio" name="ct" value="pie"><span>🥧 Круговая</span></label>
         <label class="chart-type-option"><input type="radio" name="ct" value="line"><span>📈 Линейная</span></label>
       </div>
+      <p id="cwMsg" style="color:var(--red);font-size:13px;text-align:center;min-height:18px;margin:6px 0;"></p>
       <div style="display:flex;gap:10px;justify-content:flex-end;">
         <button type="button" class="btn" style="background:#fff;color:var(--accent-dark);border:1px solid #c7d5f0;padding:10px 18px;" id="cwCancel">Отмена</button>
         <button type="button" class="btn btn-primary" style="padding:10px 18px;" id="cwOk">Готово</button>
@@ -373,21 +366,30 @@ function openChartWizard({ values, onInsert }) {
     </div>`;
   document.body.appendChild(ov);
 
+  const msgEl = ov.querySelector('#cwMsg');
   const updateActive = () => {
     ov.querySelectorAll('.chart-type-option').forEach(l => l.classList.remove('active'));
     const checked = ov.querySelector('input[name="ct"]:checked');
-    if (checked) checked.closest('.chart-type-option').classList.add('active');
+    if (checked) {
+      checked.closest('.chart-type-option').classList.add('active');
+      msgEl.textContent = '';
+    }
   };
-  updateActive();
+
+  // НЕТ checked по умолчанию — все пустые
   ov.querySelectorAll('input[name="ct"]').forEach(r => r.addEventListener('change', updateActive));
 
   const close = () => { ov.remove(); };
   ov.querySelector('#cwClose').addEventListener('click', close);
   ov.querySelector('#cwCancel').addEventListener('click', close);
   ov.querySelector('#cwOk').addEventListener('click', () => {
-    const type = ov.querySelector('input[name="ct"]:checked').value;
+    const checked = ov.querySelector('input[name="ct"]:checked');
+    if (!checked) {
+      msgEl.textContent = 'Сначала выберите тип диаграммы.';
+      return;
+    }
     close();
-    onInsert(type);
+    onInsert(checked.value);
   });
 }
 
@@ -414,7 +416,7 @@ function buildPieHTML(vals) {
 }
 
 /* ==========================================================
-   БЛОК 2–4: ГРАФЫ (не менялись)
+   БЛОК 2–4: ГРАФЫ
    ========================================================== */
 
 const NODES = {
@@ -647,13 +649,12 @@ function renderTask() {
       chartType: null
     };
     let html = `<p class="task-topic">Задание ${state.index + 1} · База данных</p>`;
-    html += `<p class="task-instruction">Выделите заголовки нужных столбцов, нажмите «Фильтр» справа сверху, настройте фильтры, подсчитайте строки. Заполните мини-таблицу, выделите её, постройте круговую диаграмму через «Вставка → Диаграмма».</p>`;
+    html += `<p class="task-instruction">Выделите заголовки нужных столбцов, нажмите «🔽 Фильтр» в верхней панели, настройте фильтры, подсчитайте строки. Заполните мини-таблицу, выделите её, постройте круговую диаграмму через «Вставка → Диаграмма...» (тип выбирайте сами).</p>`;
     html += renderDBTaskHTML(task);
     html += '<div class="feedback" id="feedback"></div>';
     html += `<div class="actions"><button type="button" class="btn btn-primary" id="nextBtn">${state.index === state.tasks.length - 1 ? 'Завершить и отправить' : 'Далее →'}</button></div>`;
     el.taskCard.innerHTML = html;
 
-    // Связываем поля ввода ответов с state
     document.querySelectorAll('.table-input').forEach(inp => {
       inp.addEventListener('input', () => {
         const i = +inp.dataset.qidx;
@@ -663,7 +664,6 @@ function renderTask() {
 
     attachDBEvents(task, state.answers[state.index]);
   } else {
-    // graph
     state.answers[state.index] = '';
     let html = `<p class="task-topic">Задание ${state.index + 1} · Графы</p>`;
     html += `<p class="task-instruction">${escapeHtml(task.instruction).replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')}</p>`;
@@ -730,7 +730,6 @@ function isCorrect(task, ans) {
     const valsOk = task.subQuestions.every((q, i) =>
       String(ans.values[i]).trim() === q.correct
     );
-    // Обязательно круговая диаграмма
     return valsOk && ans.chartBuilt && ans.chartType === 'pie';
   }
   if (task.type === 'graph') {
