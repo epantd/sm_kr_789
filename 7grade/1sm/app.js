@@ -15,12 +15,13 @@ const INTERNAL_DEVICES = ['Процессор', 'Оперативная памя
 const EXTERNAL_DEVICES = ['Клавиатура', 'Мышь', 'Монитор', 'Принтер', 'Сканер', 'Веб-камера', 'Внешний диск', 'USB-флешка'];
 const RAM_DEVICES     = ['Оперативная память (RAM)', 'DDR', 'DIMM', 'DRAM'];
 const STORAGE_DEVICES = ['Жёсткий диск (HDD)', 'SSD-накопитель', 'USB-флешка', 'SD-карта', 'DVD-диск', 'Blu-Ray'];
-const PORTS           = ['USB', 'HDMI', 'VGA', 'PS/2', 'Ethernet', 'Разъём 3.5 мм Jack', 'DisplayPort'];
-const NOT_PORTS       = ['Клавиатура', 'Монитор', 'Процессор', 'Принтер', 'Мышь', 'Оперативная память'];
+
+// ✅ ИСПРАВЛЕНО: убраны Ethernet, Jack 3.5 мм, DisplayPort
+const PORTS           = ['USB', 'HDMI', 'VGA', 'PS/2'];
 
 const TOP_FOLDERS = ['Документы', 'Музыка', 'Проекты', 'Работа', 'Учёба', 'Игры', 'Фото', 'Видео', 'Загрузки', 'Архив'];
 const SUB_FOLDERS = ['2023', '2024', '2025', 'Лето', 'Зима', 'Ретро', 'Хиты', 'Поп', 'Рок', 'Отчёты', 'Личное', 'Друзья', 'Школа', 'ДЗ', 'Математика', 'Химия'];
-const FILE_NAMES = ['report.docx', 'song.mp3', 'photo.jpg', 'план.txt', 'note.txt', 'video.mp4', 'data.xlsx', 'presentation.pptx', 'setup.exe', 'logo.png', 'ДЗ.txt', 'конспект.docx'];
+const FILE_NAMES = ['report.docx', 'song.mp3', 'photo.jpg', 'план.txt', 'note.txt', 'video.mp4', 'data.xlsx', 'presentation.pptx', 'logo.png', 'ДЗ.txt', 'конспект.docx'];
 
 /* ==========================================================
    УТИЛИТЫ
@@ -50,7 +51,7 @@ function escapeHtml(s) {
 function generateTasks() {
   const tasks = [];
 
-    /* ---------- ЗАДАНИЕ 1: устройства ввода ---------- */
+  /* ---------- ЗАДАНИЕ 1: устройства ввода ---------- */
   {
     const correctCount = randInt(3, 4);
     const correctList = pickN(INPUT_DEVICES, correctCount);
@@ -118,7 +119,7 @@ function generateTasks() {
     });
   }
 
-  /* ---------- ЗАДАНИЕ 5: долговременная память / хранение ---------- */
+  /* ---------- ЗАДАНИЕ 5: долговременная память ---------- */
   {
     const correctCount = randInt(3, 4);
     const correctList = pickN(STORAGE_DEVICES, correctCount);
@@ -140,8 +141,9 @@ function generateTasks() {
   }
 
   /* ---------- ЗАДАНИЕ 6: порты компьютера ---------- */
+  // ✅ ИСПРАВЛЕНО: correctCount = 2-3, чтобы не выбирались все 4 порта сразу
   {
-    const correctCount = randInt(3, 4);
+    const correctCount = randInt(2, 3);
     const correctList = pickN(PORTS, correctCount);
     const wrongPool = [
       ...INPUT_DEVICES,
@@ -159,7 +161,7 @@ function generateTasks() {
     });
   }
 
-  /* ---------- Общая структура дерева для заданий файловой системы ---------- */
+  /* ---------- Дерево файловой системы ---------- */
   const tree = generateFsTree();
 
   /* ---------- ЗАДАНИЕ 7: правильный полный путь ---------- */
@@ -167,7 +169,8 @@ function generateTasks() {
     const { path, top, sub, file } = randomFileInTree(tree);
     const wrong1 = 'C:\\' + top + '\\' + file;
     const wrong2 = 'C:\\' + sub + '\\' + file;
-    const wrong3 = 'C:\\' + top + '\\' + sub + '\\' + 'other_' + file;
+    const otherFile = pick(FILE_NAMES.filter(f => f !== file));
+    const wrong3 = 'C:\\' + top + '\\' + sub + '\\' + otherFile;
     const options = shuffle([path, wrong1, wrong2, wrong3]);
     tasks.push({
       topic: 'Файловая система',
@@ -213,30 +216,29 @@ function generateTasks() {
   }
 
   /* ---------- ЗАДАНИЕ 10: многошаговая история ---------- */
+  // ✅ ИСПРАВЛЕНО: correctPath теперь содержит subA (стартовую папку)
   {
-    // Строим историю: старт в папке, потом N переходов
     const topA = pick(TOP_FOLDERS);
     const subA = pick(SUB_FOLDERS);
     const subB = pick(SUB_FOLDERS.filter(s => s !== subA));
     const subC = pick(SUB_FOLDERS.filter(s => s !== subA && s !== subB));
     const fileName = pick(FILE_NAMES);
 
-    // Сценарий: старт C:\A\X → вниз в Y → вверх → вниз в Z → файл
-    // Итог: C:\A\Z\файл
     const startPath = `C:\\${topA}\\${subA}`;
     const history = `Старт в папке ${startPath}. Затем спустились на один уровень вниз в папку «${subB}», поднялись на один уровень вверх, спустились в папку «${subC}» и нашли там файл «${fileName}».`;
-    const correctPath = `C:\\${topA}\\${subC}\\${fileName}`;
+
+    // Трассировка:
+    // C:\topA\subA → вниз subB → C:\topA\subA\subB → вверх → C:\topA\subA → вниз subC → C:\topA\subA\subC → файл
+    const correctPath = `C:\\${topA}\\${subA}\\${subC}\\${fileName}`;
+    const wrong1 = `C:\\${topA}\\${subA}\\${subB}\\${fileName}`;  // забыл вернуться из subB
+    const wrong2 = `C:\\${topA}\\${subC}\\${fileName}`;           // потерял subA
+    const wrong3 = `C:\\${subC}\\${fileName}`;                     // потерял topA и subA
 
     tasks.push({
       topic: 'Файловая система',
       instruction: history + ' Запишите правильный полный путь к файлу.',
       type: 'choice',
-      options: shuffle([
-        correctPath,
-        `C:\\${topA}\\${subB}\\${fileName}`,
-        `C:\\${topA}\\${subA}\\${subC}\\${fileName}`,
-        `C:\\${subC}\\${fileName}`
-      ]),
+      options: shuffle([correctPath, wrong1, wrong2, wrong3]),
       correct: correctPath
     });
   }
@@ -258,12 +260,18 @@ function generateTasks() {
   }
 
   /* ---------- ЗАДАНИЕ 12: правильный путь по дереву ---------- */
+  // ✅ ИСПРАВЛЕНО: wrong1 гарантированно не равен path
   {
     const { path, file } = randomFileInTree(tree);
     const parts = path.replace(/^C:\\/, '').replace(/\\[^\\]+$/, '').split('\\');
-    const wrong1 = 'C:\\' + shuffle(parts).join('\\') + '\\' + file;
+
+    // Гарантированно перемешанный вариант (не равный оригиналу)
+    const shuffledParts = [...parts];
+    [shuffledParts[0], shuffledParts[1]] = [shuffledParts[1], shuffledParts[0]];
+    const wrong1 = 'C:\\' + shuffledParts.join('\\') + '\\' + file;
     const wrong2 = 'C:\\' + parts.slice(0, -1).join('\\') + '\\' + file;
     const wrong3 = 'C:\\' + parts[parts.length - 1] + '\\' + file;
+
     tasks.push({
       topic: 'Файловая система',
       instruction: `Рассмотрите дерево каталогов. Выберите правильный полный путь к файлу «${file}».`,
@@ -377,8 +385,8 @@ const state = {
   student: { lastName: '', firstName: '', grade: '', letter: '' },
   tasks: [],
   index: 0,
-  answers: [],   // массив: для choice — строка или null; для multi — массив выбранных
-  scores: [],    // 0/1
+  answers: [],
+  scores: [],
   warnedSkip: false,
   submitted: false
 };
@@ -474,7 +482,6 @@ function renderTask() {
 
   el.taskCard.innerHTML = html;
 
-  // Хранилище текущего ответа
   if (task.type === 'choice') {
     state.answers[state.index] = null;
     document.querySelectorAll('.option').forEach(btn => {
@@ -571,7 +578,7 @@ function submitResults() {
   });
 
   const payload = {
-    work: '7-1sm',   
+    work: '7-1sm',
     lastName: state.student.lastName,
     firstName: state.student.firstName,
     grade: state.student.grade,
@@ -581,7 +588,6 @@ function submitResults() {
     total: total
   };
 
-  // Отправляем без ожидания ответа (no-cors)
   fetch(SCRIPT_URL, {
     method: 'POST',
     mode: 'no-cors',
