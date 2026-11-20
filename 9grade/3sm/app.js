@@ -2,12 +2,13 @@
 
 /* ==========================================================
    САМОСТОЯТЕЛЬНАЯ РАБОТА 9 КЛАСС
-   4 (БД+Диаграмма) + 4 + 2 + 2 = 12 заданий
+   4 (БД + средний балл + диаграмма) + 4 + 2 + 2 = 12 заданий
    ========================================================== */
 
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyF2x-qnIPerEebab8j4PXEr_U7csUGruQROCLgsKYGRUgeBvMjiHnBSEfpGhE881Wk/exec';
 const WORK_ID = '9-3sm';
 const TOTAL_TASKS = 12;
+const STUDENTS_COUNT = 20;
 
 /* ---------------------- УТИЛИТЫ ---------------------- */
 
@@ -26,48 +27,64 @@ function escapeHtml(s) {
 }
 
 /* ==========================================================
-   БЛОК 1: БАЗА ДАННЫХ (интерактив как в LibreOffice Calc)
+   БЛОК 1: БАЗА ДАННЫХ + СРЕДНИЙ БАЛЛ
    ========================================================== */
 
-const SURNAMES = ['Иванов', 'Смирнов', 'Кузнецов', 'Попов', 'Васильев', 'Петров', 'Соколов', 'Михайлов', 'Новиков', 'Фёдоров', 'Морозов', 'Волков', 'Алексеев', 'Лебедев', 'Семёнов'];
+const SURNAMES = [
+  'Иванов', 'Смирнов', 'Кузнецов', 'Попов', 'Васильев', 'Петров',
+  'Соколов', 'Михайлов', 'Новиков', 'Фёдоров', 'Морозов', 'Волков',
+  'Алексеев', 'Лебедев', 'Семёнов', 'Козлов', 'Степанов', 'Николаев',
+  'Орлов', 'Андреев', 'Макаров', 'Никитин', 'Захаров', 'Зайцев',
+  'Соловьёв', 'Борисов', 'Яковлев', 'Григорьев', 'Романов', 'Воробьёв',
+  'Сергеев', 'Кузьмин', 'Фролов', 'Александров', 'Дмитриев'
+];
 const CITIES = ['Москва', 'Казань', 'Сочи'];
 const GENDERS = ['М', 'Ж'];
 const GRADES = [3, 4, 5];
 
 const DB_COLUMNS = [
-  { key: 'name',   label: 'Фамилия' },
-  { key: 'city',   label: 'Город' },
-  { key: 'gender', label: 'Пол' },
-  { key: 'math',   label: 'Математика' },
-  { key: 'rus',    label: 'Русский' },
-  { key: 'eng',    label: 'Английский' }
+  { key: 'name',   label: 'Фамилия',    numeric: false },
+  { key: 'city',   label: 'Город',      numeric: false },
+  { key: 'gender', label: 'Пол',        numeric: false },
+  { key: 'math',   label: 'Математика', numeric: true },
+  { key: 'rus',    label: 'Русский',    numeric: true },
+  { key: 'eng',    label: 'Английский', numeric: true }
 ];
 
+// 4 задания: 3 фильтр-вопроса (для диаграммы) + 1 про среднее
 const DB_TASK_CONFIGS = [
   [
     { text: 'Из Москвы получили «5» по математике', fn: s => s.city === 'Москва' && s.math === 5 },
     { text: 'Девочки получили «4» или «5» по русскому', fn: s => s.gender === 'Ж' && s.rus >= 4 },
-    { text: 'Из Казани получили «4» или «5» по английскому', fn: s => s.city === 'Казань' && s.eng >= 4 }
+    { text: 'Из Казани получили «4» или «5» по английскому', fn: s => s.city === 'Казань' && s.eng >= 4 },
+    { type: 'avg', text: 'Средний балл по математике у учеников из Сочи',
+      filterFn: s => s.city === 'Сочи', column: 'math' }
   ],
   [
     { text: 'Мальчики из Сочи получили «5» по русскому', fn: s => s.city === 'Сочи' && s.gender === 'М' && s.rus === 5 },
     { text: 'Девочки получили «5» по английскому', fn: s => s.gender === 'Ж' && s.eng === 5 },
-    { text: 'Ученики с «4» и «5» по всем трём предметам', fn: s => s.math >= 4 && s.rus >= 4 && s.eng >= 4 }
+    { text: 'Ученики с «4» и «5» по всем трём предметам', fn: s => s.math >= 4 && s.rus >= 4 && s.eng >= 4 },
+    { type: 'avg', text: 'Средний балл по английскому у девочек',
+      filterFn: s => s.gender === 'Ж', column: 'eng' }
   ],
   [
     { text: 'Из Казани получили «4» по математике', fn: s => s.city === 'Казань' && s.math === 4 },
     { text: 'Девочки из Москвы получили «3» по русскому', fn: s => s.city === 'Москва' && s.gender === 'Ж' && s.rus === 3 },
-    { text: 'Мальчики получили «5» по математике', fn: s => s.gender === 'М' && s.math === 5 }
+    { text: 'Мальчики получили «5» по математике', fn: s => s.gender === 'М' && s.math === 5 },
+    { type: 'avg', text: 'Средний балл по русскому у учеников из Казани',
+      filterFn: s => s.city === 'Казань', column: 'rus' }
   ],
   [
     { text: 'Из Москвы получили «4» по математике', fn: s => s.city === 'Москва' && s.math === 4 },
     { text: 'Девочки получили «5» и по русскому, и по английскому', fn: s => s.gender === 'Ж' && s.rus === 5 && s.eng === 5 },
-    { text: 'Из Сочи получили «5» по всем трём предметам', fn: s => s.city === 'Сочи' && s.math === 5 && s.rus === 5 && s.eng === 5 }
+    { text: 'Из Сочи получили «5» по всем трём предметам', fn: s => s.city === 'Сочи' && s.math === 5 && s.rus === 5 && s.eng === 5 },
+    { type: 'avg', text: 'Средний балл по математике у мальчиков',
+      filterFn: s => s.gender === 'М', column: 'math' }
   ]
 ];
 
 function generateStudents() {
-  const names = shuffle([...SURNAMES]).slice(0, 10);
+  const names = shuffle([...SURNAMES]).slice(0, STUDENTS_COUNT);
   return names.map(name => ({
     name,
     city: pick(CITIES),
@@ -78,24 +95,76 @@ function generateStudents() {
   }));
 }
 
+function computeAverage(students, filterFn, column) {
+  const matching = students.filter(filterFn);
+  if (!matching.length) return null;
+  const vals = matching.map(s => Number(s[column])).filter(v => !isNaN(v));
+  if (!vals.length) return null;
+  const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+  return avg;
+}
+
 function generateDBTask(taskIndex) {
   const config = DB_TASK_CONFIGS[taskIndex];
-  let students, values;
-  for (let attempt = 0; attempt < 300; attempt++) {
-    students = generateStudents();
-    values = config.map(cfg => students.filter(cfg.fn).length);
-    if (values.some(v => v < 1 || v > 6)) continue;
-    if (values[0] === values[1] || values[1] === values[2] || values[0] === values[2]) continue;
+  const filterConfigs = config.filter(c => c.type !== 'avg');
+  const avgConfig = config.find(c => c.type === 'avg');
+
+  let students = null;
+  let values = null;
+  let avgInfo = null;
+
+  for (let attempt = 0; attempt < 500; attempt++) {
+    const candidateStudents = generateStudents();
+
+    // Проверяем 3 фильтр-значения
+    const candidateValues = filterConfigs.map(cfg => candidateStudents.filter(cfg.fn).length);
+
+    // Каждое значение от 2 до 10, все разные, без сильного перекоса
+    if (candidateValues.some(v => v < 2 || v > 10)) continue;
+    if (candidateValues[0] === candidateValues[1] ||
+        candidateValues[1] === candidateValues[2] ||
+        candidateValues[0] === candidateValues[2]) continue;
+    if (Math.max(...candidateValues) / Math.min(...candidateValues) > 4) continue;
+
+    // Проверяем средний балл
+    const matching = candidateStudents.filter(avgConfig.filterFn);
+    if (matching.length < 3) continue;
+
+    const avg = computeAverage(candidateStudents, avgConfig.filterFn, avgConfig.column);
+    if (avg === null) continue;
+
+    // Среднее не должно быть ровно целым (иначе угадать легко)
+    if (Math.abs(avg - Math.round(avg)) < 0.05) continue;
+
+    students = candidateStudents;
+    values = candidateValues;
+    avgInfo = {
+      text: avgConfig.text,
+      filterFn: avgConfig.filterFn,
+      column: avgConfig.column,
+      correct: avg.toFixed(2)
+    };
     break;
   }
+
+  // Fallback — если за 500 раз не нашли «идеальный» набор
   if (!students) {
     students = generateStudents();
-    values = config.map(cfg => students.filter(cfg.fn).length);
+    values = filterConfigs.map(cfg => students.filter(cfg.fn).length);
+    const avg = computeAverage(students, avgConfig.filterFn, avgConfig.column) || 0;
+    avgInfo = {
+      text: avgConfig.text,
+      filterFn: avgConfig.filterFn,
+      column: avgConfig.column,
+      correct: avg.toFixed(2)
+    };
   }
+
   return {
     type: 'db_chart',
     students,
-    subQuestions: config.map((c, i) => ({ text: c.text, correct: String(values[i]) }))
+    subQuestions: filterConfigs.map((c, i) => ({ text: c.text, correct: String(values[i]) })),
+    avgQuestion: avgInfo
   };
 }
 
@@ -104,7 +173,7 @@ function generateDBTask(taskIndex) {
 function renderDBTaskHTML(task) {
   let html = '';
 
-  // ВЕРХНЯЯ ПАНЕЛЬ: Вставка, Сортировка, Фильтр, Сбросить (как в тренажёре)
+  // Верхняя панель
   html += '<div class="data-toolbar">';
   html += '<span class="data-toolbar-label">Таблица данных</span>';
   html += '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">';
@@ -118,7 +187,7 @@ function renderDBTaskHTML(task) {
   html += '<button type="button" class="toolbar-btn" id="resetMainBtn">✖ Сбросить</button>';
   html += '</div></div>';
 
-  // Таблица
+  // Основная таблица
   html += '<div class="table-wrap"><table class="data-table" id="dbTable"><thead><tr>';
   DB_COLUMNS.forEach(col => {
     html += `<th class="header-cell" data-col="${col.key}">
@@ -126,19 +195,28 @@ function renderDBTaskHTML(task) {
              </th>`;
   });
   html += '</tr></thead><tbody></tbody></table></div>';
-  html += '<p class="table-info" id="dbTableInfo"></p>';
 
-  // Мини-таблица с вопросами
+  // Панель статистики снизу — заполняется в attachDBEvents
+  html += '<div class="db-status-bar" id="dbStatsBar"></div>';
+
+  // Мини-таблица для диаграммы (3 вопроса)
   html += '<p class="task-instruction" style="margin-top:16px;">Подсчитайте с помощью фильтров и впишите значения в мини-таблицу:</p>';
   html += '<table class="mini-table" id="dbMiniTable"><thead><tr><th>№</th><th>Вопрос</th><th>Ответ</th></tr></thead><tbody>';
   task.subQuestions.forEach((q, i) => {
     html += `<tr>
                <td>${i + 1}</td>
                <td style="text-align:left">${escapeHtml(q.text)}</td>
-               <td><input type="text" inputmode="numeric" class="table-input" data-qidx="${i}" placeholder="?" maxlength="2"></td>
+               <td><input type="text" inputmode="numeric" class="table-input" data-qidx="${i}" placeholder="?" maxlength="3"></td>
              </tr>`;
   });
   html += '</tbody></table>';
+
+  // Блок вопроса про среднее
+  html += `<div style="margin:18px auto;padding:14px 18px;background:#fef3c7;border-left:4px solid #b45309;border-radius:10px;max-width:650px;">
+    <p style="margin:0 0 10px;font-size:14px;line-height:1.5;"><b>🧮 Дополнительный вопрос:</b> ${escapeHtml(task.avgQuestion.text)}</p>
+    <input type="text" class="table-input" id="avgInput" placeholder="Среднее" style="width:140px;margin:0 auto;display:block;">
+    <p style="margin:8px 0 0;font-size:12px;color:#b45309;text-align:center;">💡 Примените нужный фильтр, кликните по заголовку числового столбца — среднее появится в панели под таблицей.</p>
+  </div>`;
 
   // Подсказка
   html += '<p class="table-info" style="text-align:center;color:var(--muted);">Выделите мини-таблицу (кликните по ней), затем нажмите «Вставка → Диаграмма...» в верхней панели.</p>';
@@ -159,16 +237,16 @@ function attachDBEvents(task, ansObj) {
   const filterHeaders = new Set();
   let sortCol = null, sortDir = 'asc';
   let miniTableSelected = false;
+  let lastSelectedCol = null;
 
   const tableEl = document.getElementById('dbTable');
   const tbody = tableEl.querySelector('tbody');
-  const infoEl = document.getElementById('dbTableInfo');
+  const statsBar = document.getElementById('dbStatsBar');
   const miniTableEl = document.getElementById('dbMiniTable');
   const chartContainer = document.getElementById('dbChartContainer');
   const insertMenu = document.getElementById('insertMainMenu');
 
-  // Отрисовка строк
-  function renderRows() {
+  function getFilteredData() {
     let data = [...students];
     for (const col in stateFilters) {
       const v = stateFilters[col];
@@ -181,6 +259,31 @@ function attachDBEvents(task, ansObj) {
         return sortDir === 'asc' ? va - vb : vb - va;
       });
     }
+    return data;
+  }
+
+  function renderStatsBar(data) {
+    let html = `<span>Строк: <b>${data.length}</b></span>`;
+    if (lastSelectedCol) {
+      const col = DB_COLUMNS.find(c => c.key === lastSelectedCol);
+      if (col) {
+        html += `<span>Столбец: <b>${col.label}</b></span>`;
+        if (col.numeric) {
+          const vals = data.map(s => Number(s[lastSelectedCol])).filter(v => !isNaN(v));
+          if (vals.length) {
+            const sum = vals.reduce((a, b) => a + b, 0);
+            const avg = sum / vals.length;
+            html += `<span>Сумма: <b>${sum}</b></span>`;
+            html += `<span>Среднее: <b>${avg.toFixed(2)}</b></span>`;
+          }
+        }
+      }
+    }
+    statsBar.innerHTML = html;
+  }
+
+  function renderRows() {
+    const data = getFilteredData();
     tbody.innerHTML = '';
     if (data.length === 0) {
       tbody.innerHTML = `<tr><td colspan="${DB_COLUMNS.length}" style="color:var(--muted);padding:14px;">Нет строк по фильтру</td></tr>`;
@@ -195,20 +298,17 @@ function attachDBEvents(task, ansObj) {
         tbody.appendChild(tr);
       });
     }
-    infoEl.textContent = `Показано строк: ${data.length}`;
+    renderStatsBar(data);
   }
 
-  // Обновление шапки (выделение + фильтры)
   function renderHeader() {
     tableEl.querySelectorAll('th.header-cell').forEach(th => {
       const col = th.dataset.col;
       th.classList.toggle('selected-header', selectedHeaders.has(col));
 
       const thInner = th.querySelector('.th-inner');
-      // Удаляем старые селекты
       thInner.querySelectorAll('.filter-select').forEach(x => x.remove());
 
-      // Выпадающий фильтр — только если фильтр включён
       if (filterHeaders.has(col)) {
         const uniq = [...new Set(students.map(s => s[col]))].sort();
         const sel = document.createElement('select');
@@ -228,18 +328,20 @@ function attachDBEvents(task, ansObj) {
     });
   }
 
-  // Клик по заголовку — выделение
+  // Клик по заголовку — выделение столбца
   tableEl.querySelectorAll('th.header-cell').forEach(th => {
     th.addEventListener('click', (e) => {
       if (e.target.closest('.filter-select')) return;
       const col = th.dataset.col;
       if (selectedHeaders.has(col)) selectedHeaders.delete(col);
       else selectedHeaders.add(col);
+      lastSelectedCol = col;
       renderHeader();
+      renderRows();
     });
   });
 
-  // Кнопка «Фильтр»
+  // Фильтр
   document.getElementById('filterMainBtn').addEventListener('click', () => {
     if (selectedHeaders.size === 0) {
       if (filterHeaders.size > 0) {
@@ -258,9 +360,9 @@ function attachDBEvents(task, ansObj) {
     }
   });
 
-  // Кнопка «Сортировка» (по последнему выделенному столбцу)
+  // Сортировка
   document.getElementById('sortMainBtn').addEventListener('click', () => {
-    const lastCol = [...selectedHeaders].pop();
+    const lastCol = [...selectedHeaders].pop() || lastSelectedCol;
     if (!lastCol) {
       alert('Сначала выделите столбец (кликните по заголовку), затем нажмите «Сортировка».');
       return;
@@ -270,17 +372,18 @@ function attachDBEvents(task, ansObj) {
     renderRows();
   });
 
-  // Кнопка «Сбросить»
+  // Сброс
   document.getElementById('resetMainBtn').addEventListener('click', () => {
     filterHeaders.clear();
     selectedHeaders.clear();
     for (const k in stateFilters) delete stateFilters[k];
     sortCol = null;
+    lastSelectedCol = null;
     renderHeader();
     renderRows();
   });
 
-  // Меню «Вставка»
+  // Вставка → Диаграмма
   const insertBtn = document.getElementById('insertMainBtn');
   insertBtn.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -304,8 +407,13 @@ function attachDBEvents(task, ansObj) {
       if (!v) allFilled = false;
       vals.push(v);
     });
+
+    const avgInput = document.getElementById('avgInput');
+    const avgVal = avgInput.value.trim();
+    if (!avgVal) allFilled = false;
+
     if (!allFilled) {
-      alert('Заполните все три ячейки ответов перед построением диаграммы.');
+      alert('Заполните все поля (3 значения + средний балл) перед построением диаграммы.');
       return;
     }
 
@@ -335,15 +443,14 @@ function attachDBEvents(task, ansObj) {
     });
   });
 
-  // Закрытие меню по клику вне
+  // Закрытие меню
   document.addEventListener('click', () => { insertMenu.hidden = true; }, { once: true });
 
-  // Первичная отрисовка
   renderHeader();
   renderRows();
 }
 
-/* ---------- Мастер диаграмм (без предвыбранной круговой) ---------- */
+/* ---------- Мастер диаграмм ---------- */
 
 function openChartWizard({ onInsert }) {
   const ov = document.createElement('div');
@@ -376,7 +483,6 @@ function openChartWizard({ onInsert }) {
     }
   };
 
-  // НЕТ checked по умолчанию — все пустые
   ov.querySelectorAll('input[name="ct"]').forEach(r => r.addEventListener('change', updateActive));
 
   const close = () => { ov.remove(); };
@@ -430,6 +536,12 @@ const POSSIBLE_EDGES = [
   ['C', 'E'], ['C', 'F'], ['D', 'G'], ['E', 'D'], ['E', 'F'], ['E', 'G'], ['F', 'G']
 ];
 
+// Безопасный fallback — гарантированно есть путь
+const SAFE_FALLBACK_EDGES = [
+  ['A', 'B'], ['A', 'C'], ['B', 'D'], ['B', 'E'],
+  ['C', 'E'], ['C', 'F'], ['D', 'G'], ['E', 'G'], ['F', 'G']
+];
+
 function countPaths(edges, start, end) {
   if (start === end) return 1;
   const dp = {};
@@ -472,7 +584,7 @@ function generateRandomEdges(targetMin, targetMax) {
       if (diff < bestDiff) { bestDiff = diff; bestEdges = edges; }
     }
   }
-  return bestEdges || POSSIBLE_EDGES.slice();
+  return bestEdges || SAFE_FALLBACK_EDGES.slice();
 }
 
 function renderGraphToSVG(edges) {
@@ -484,6 +596,7 @@ function renderGraphToSVG(edges) {
   svg.appendChild(defs);
   edges.forEach(([u, v]) => {
     const p1 = NODES[u], p2 = NODES[v];
+    if (!p1 || !p2) return;
     const dx = p2.x - p1.x, dy = p2.y - p1.y;
     const len = Math.sqrt(dx * dx + dy * dy);
     const ux = dx / len, uy = dy / len;
@@ -515,62 +628,95 @@ function renderGraphToSVG(edges) {
 }
 
 /* ==========================================================
-   ГЕНЕРАЦИЯ ВСЕХ ЗАДАНИЙ
+   ГЕНЕРАЦИЯ ЗАДАНИЙ (с защитой от бесконечного цикла)
    ========================================================== */
+
+function generateSimpleGraphTask(lastAnswer) {
+  for (let attempt = 0; attempt < 100; attempt++) {
+    const edges = generateRandomEdges(4, 25);
+    const paths = countPaths(edges, 'A', 'G');
+    if (paths > 0 && paths !== lastAnswer) {
+      return { edges, paths };
+    }
+  }
+  return { edges: SAFE_FALLBACK_EDGES.slice(), paths: countPaths(SAFE_FALLBACK_EDGES, 'A', 'G') };
+}
+
+function generateThroughTask(lastAnswer) {
+  for (let attempt = 0; attempt < 100; attempt++) {
+    const edges = generateRandomEdges(4, 25);
+    const inter = getIntermediateNodes(edges, 'A', 'G');
+    if (!inter.length) continue;
+    const targetNode = pick(inter);
+    const paths = countPaths(edges, 'A', targetNode) * countPaths(edges, targetNode, 'G');
+    if (paths > 0 && paths !== lastAnswer) {
+      return { edges, targetNode, paths };
+    }
+  }
+  // Fallback: E — известная промежуточная вершина в safe графе
+  const edges = SAFE_FALLBACK_EDGES.slice();
+  return { edges, targetNode: 'E', paths: countPaths(edges, 'A', 'E') * countPaths(edges, 'E', 'G') };
+}
+
+function generateNotThroughTask(lastAnswer) {
+  for (let attempt = 0; attempt < 100; attempt++) {
+    const edges = generateRandomEdges(4, 25);
+    const inter = getIntermediateNodes(edges, 'A', 'G');
+    if (!inter.length) continue;
+    const targetNode = pick(inter);
+    const total = countPaths(edges, 'A', 'G');
+    const through = countPaths(edges, 'A', targetNode) * countPaths(edges, targetNode, 'G');
+    const paths = total - through;
+    if (paths > 0 && paths !== lastAnswer) {
+      return { edges, targetNode, paths };
+    }
+  }
+  const edges = SAFE_FALLBACK_EDGES.slice();
+  const total = countPaths(edges, 'A', 'G');
+  const through = countPaths(edges, 'A', 'E') * countPaths(edges, 'E', 'G');
+  return { edges, targetNode: 'E', paths: total - through };
+}
 
 function generateTasks() {
   const tasks = [];
   let lastAnswer = null;
 
+  // 4 БД-задания
   for (let i = 0; i < 4; i++) tasks.push(generateDBTask(i));
 
+  // 4 простых
   for (let i = 0; i < 4; i++) {
-    let edges, paths;
-    do {
-      edges = generateRandomEdges(4, 25);
-      paths = countPaths(edges, 'A', 'G');
-    } while (paths === lastAnswer);
-    lastAnswer = paths;
+    const r = generateSimpleGraphTask(lastAnswer);
+    lastAnswer = r.paths;
     tasks.push({
       type: 'graph',
       instruction: 'На рисунке — схема дорог. По каждой дороге можно двигаться только в одном направлении (по стрелке).\nСколько существует различных путей из города A в город G?',
-      graphEdges: edges, correct: String(paths)
+      graphEdges: r.edges,
+      correct: String(r.paths)
     });
   }
 
+  // 2 НЕ через
   for (let i = 0; i < 2; i++) {
-    let edges, paths, targetNode;
-    do {
-      edges = generateRandomEdges(4, 25);
-      const inter = getIntermediateNodes(edges, 'A', 'G');
-      if (!inter.length) continue;
-      targetNode = pick(inter);
-      const total = countPaths(edges, 'A', 'G');
-      const through = countPaths(edges, 'A', targetNode) * countPaths(edges, targetNode, 'G');
-      paths = total - through;
-    } while (paths === lastAnswer || paths <= 0);
-    lastAnswer = paths;
+    const r = generateNotThroughTask(lastAnswer);
+    lastAnswer = r.paths;
     tasks.push({
       type: 'graph',
-      instruction: `На рисунке — схема дорог.\nСколько существует различных путей из города A в город G, **не проходящих** через город ${targetNode}?`,
-      graphEdges: edges, correct: String(paths)
+      instruction: `На рисунке — схема дорог.\nСколько существует различных путей из города A в город G, **не проходящих** через город ${r.targetNode}?`,
+      graphEdges: r.edges,
+      correct: String(r.paths)
     });
   }
 
+  // 2 через
   for (let i = 0; i < 2; i++) {
-    let edges, paths, targetNode;
-    do {
-      edges = generateRandomEdges(4, 25);
-      const inter = getIntermediateNodes(edges, 'A', 'G');
-      if (!inter.length) continue;
-      targetNode = pick(inter);
-      paths = countPaths(edges, 'A', targetNode) * countPaths(edges, targetNode, 'G');
-    } while (paths === lastAnswer || paths <= 0);
-    lastAnswer = paths;
+    const r = generateThroughTask(lastAnswer);
+    lastAnswer = r.paths;
     tasks.push({
       type: 'graph',
-      instruction: `На рисунке — схема дорог.\nСколько существует различных путей из города A в город G, **проходящих** через город ${targetNode}?`,
-      graphEdges: edges, correct: String(paths)
+      instruction: `На рисунке — схема дорог.\nСколько существует различных путей из города A в город G, **проходящих** через город ${r.targetNode}?`,
+      graphEdges: r.edges,
+      correct: String(r.paths)
     });
   }
 
@@ -645,11 +791,12 @@ function renderTask() {
   if (task.type === 'db_chart') {
     state.answers[state.index] = {
       values: ['', '', ''],
+      avgValue: '',
       chartBuilt: false,
       chartType: null
     };
     let html = `<p class="task-topic">Задание ${state.index + 1} · База данных</p>`;
-    html += `<p class="task-instruction">Выделите заголовки нужных столбцов, нажмите «🔽 Фильтр» в верхней панели, настройте фильтры, подсчитайте строки. Заполните мини-таблицу, выделите её, постройте круговую диаграмму через «Вставка → Диаграмма...» (тип выбирайте сами).</p>`;
+    html += `<p class="task-instruction">Выделите заголовки нужных столбцов, нажмите «🔽 Фильтр» в верхней панели, настройте фильтры, подсчитайте строки. Заполните мини-таблицу и поле среднего балла, выделите мини-таблицу, постройте круговую диаграмму через «Вставка → Диаграмма...» (тип выбирайте сами).</p>`;
     html += renderDBTaskHTML(task);
     html += '<div class="feedback" id="feedback"></div>';
     html += `<div class="actions"><button type="button" class="btn btn-primary" id="nextBtn">${state.index === state.tasks.length - 1 ? 'Завершить и отправить' : 'Далее →'}</button></div>`;
@@ -658,9 +805,16 @@ function renderTask() {
     document.querySelectorAll('.table-input').forEach(inp => {
       inp.addEventListener('input', () => {
         const i = +inp.dataset.qidx;
-        state.answers[state.index].values[i] = inp.value.trim();
+        if (!isNaN(i)) state.answers[state.index].values[i] = inp.value.trim();
       });
     });
+
+    const avgInput = document.getElementById('avgInput');
+    if (avgInput) {
+      avgInput.addEventListener('input', () => {
+        state.answers[state.index].avgValue = avgInput.value.trim();
+      });
+    }
 
     attachDBEvents(task, state.answers[state.index]);
   } else {
@@ -718,6 +872,7 @@ function isEmpty(task, ans) {
   if (task.type === 'db_chart') {
     if (!ans) return true;
     if (ans.values.some(v => !String(v).trim())) return true;
+    if (!ans.avgValue || !String(ans.avgValue).trim()) return true;
     if (!ans.chartBuilt) return true;
     return false;
   }
@@ -725,12 +880,24 @@ function isEmpty(task, ans) {
   return true;
 }
 
+function checkAvgAnswer(avgQuestion, students, userVal) {
+  const matching = students.filter(avgQuestion.filterFn);
+  if (!matching.length) return false;
+  const vals = matching.map(s => Number(s[avgQuestion.column])).filter(v => !isNaN(v));
+  if (!vals.length) return false;
+  const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+  const userNum = parseFloat(String(userVal).trim().replace(',', '.'));
+  if (isNaN(userNum)) return false;
+  return Math.abs(userNum - avg) < 0.005;
+}
+
 function isCorrect(task, ans) {
   if (task.type === 'db_chart') {
     const valsOk = task.subQuestions.every((q, i) =>
       String(ans.values[i]).trim() === q.correct
     );
-    return valsOk && ans.chartBuilt && ans.chartType === 'pie';
+    const avgOk = checkAvgAnswer(task.avgQuestion, task.students, ans.avgValue);
+    return valsOk && avgOk && ans.chartBuilt && ans.chartType === 'pie';
   }
   if (task.type === 'graph') {
     return String(ans).trim().replace(/\s/g, '') === task.correct;
